@@ -1,48 +1,70 @@
-import {
-  DocumentType,
-  getModelForClass,
-  index,
-  modelOptions,
-  pre,
-  prop,
-} from "@typegoose/typegoose";
-import bcrypt from "bcryptjs";
+import MongooseService from "../services/mongoose";
 
-@index({ email: 1 })
-@pre<User>("save", async function () {
-  // Hash password if the password is new or was updated
-  if (!this.isModified("password")) return;
+import { model, Schema, Model, Document } from "mongoose";
 
-  // Hash password with costFactor of 12
-  this.password = await bcrypt.hash(this.password, 12);
-})
-@modelOptions({
-  schemaOptions: {
-    // Add createdAt and updatedAt fields
-    timestamps: true,
-  },
-})
+import { scrypt, randomBytes } from "crypto";
 
-// Export the User class to be used as TypeScript type
-export class User {
-  @prop()
-  name: string;
+import { promisify } from "util";
 
-  @prop({ unique: true, required: true })
+import { Password } from "../services/password";
+
+const scryptAsync = promisify(scrypt);
+
+export interface IUser {
   email: string;
-
-  @prop({ required: true, minlength: 8, maxLength: 32, select: false })
   password: string;
-
-  @prop({ default: "user" })
-  role: string;
-
-  // Instance method to check if passwords match
-  async comparePasswords(hashedPassword: string, candidatePassword: string) {
-    return await bcrypt.compare(candidatePassword, hashedPassword);
-  }
+  username: string;
 }
 
-// Create the user model from the User class
-const userModel = getModelForClass(User);
-export default userModel;
+export interface UserDocument extends Document {
+  email: string;
+  password: string;
+  username: string;
+}
+
+interface UserModel extends Model<UserDocument> {
+  build(attrs: IUser): UserDocument;
+}
+
+const UserSchema: Schema = new Schema(
+  {
+    email: { type: String, required: true },
+
+    password: { type: String, required: true },
+
+    username: { type: String, required: true },
+  },
+
+  {
+    toObject: {
+      transform: function (doc, ret) {},
+    },
+
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+      },
+    },
+  }
+);
+
+UserSchema.pre("save", async function (done) {
+  if (this.isModified("password")) {
+    const hashed = await Password.toHash(this.get("password"));
+
+    this.set("password", hashed);
+  }
+
+  done();
+});
+
+UserSchema.statics.build = (attrs: IUser) => {
+  return new User(attrs);
+};
+
+const User = MongooseService.getInstance().model<UserDocument, UserModel>(
+  "User",
+  UserSchema
+);
+
+export default User;
