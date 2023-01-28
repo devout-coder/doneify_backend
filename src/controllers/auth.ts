@@ -20,24 +20,21 @@ class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const email = req.body.email;
-
       const password = req.body.password;
-
       const user = await AuthService.findUserByEmail(email);
 
       log("user", user);
 
       if (user) {
         const isPasswordMatch = await Password.compare(user.password, password);
-
         if (!isPasswordMatch) {
           throw new Error("Invalid Password");
         } else {
           log("jwt Secret", jwtSecret);
-
           const token = jwt.sign(req.body, jwtSecret, {
             expiresIn: tokenExpirationInSeconds,
           });
+          console.log();
 
           return res.status(200).json({
             success: true,
@@ -47,7 +44,6 @@ class AuthController {
         }
       } else {
         log("User Not Found");
-
         throw new Error("User Not Found");
       }
     } catch (e) {
@@ -60,11 +56,8 @@ class AuthController {
       const username = req.body.username;
 
       const email = req.body.email;
-
       const password = req.body.password;
-
       const user = await AuthService.findUserByEmail(email);
-
       log("user", user);
 
       if (user) {
@@ -76,11 +69,9 @@ class AuthController {
             email,
             password,
           });
-
           const token = jwt.sign({ username, password }, jwtSecret, {
             expiresIn: tokenExpirationInSeconds,
           });
-
           return res.status(200).json({
             success: true,
             data: newUser,
@@ -88,7 +79,6 @@ class AuthController {
           });
         } catch (e) {
           log("Controller capturing error", e);
-
           throw new Error("Error while register");
         }
       }

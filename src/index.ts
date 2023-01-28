@@ -10,6 +10,7 @@ import { RouteConfig } from "./routeConfig";
 
 import { UserRoutes } from "./routes/user";
 import { AuthRoutes } from "./routes/auth";
+import mongoose from "mongoose";
 
 const routes: Array<RouteConfig> = [];
 
@@ -39,10 +40,25 @@ app.get("/", (req: Request, res: Response) => {
 
 const server: http.Server = http.createServer(app);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on ${PORT}`);
+const mongooseOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+};
 
-  routes.forEach((route: RouteConfig) => {
-    console.log(`Routes configured for ${route.getName()}`);
+const MONGODB_URI = process.env.MONGODB_URI || "";
+
+mongoose
+  .connect(MONGODB_URI, mongooseOptions)
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server is running on ${PORT}`);
+
+      routes.forEach((route: RouteConfig) => {
+        console.log(`Routes configured for ${route.getName()}`);
+      });
+    });
+  })
+  .catch((err) => {
+    console.log(`something fucked up `, err);
   });
-});

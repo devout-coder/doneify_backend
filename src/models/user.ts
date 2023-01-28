@@ -1,6 +1,4 @@
-import MongooseService from "../services/mongoose";
-
-import { model, Schema, Model, Document } from "mongoose";
+import mongoose, { model, Schema, Model, Document } from "mongoose";
 
 import { scrypt, randomBytes } from "crypto";
 
@@ -34,8 +32,8 @@ const UserSchema: Schema = new Schema(
 
     username: { type: String, required: true },
   },
-
   {
+    collection: "users",
     toObject: {
       transform: function (doc, ret) {},
     },
@@ -62,9 +60,6 @@ UserSchema.statics.build = (attrs: IUser) => {
   return new User(attrs);
 };
 
-const User = MongooseService.getInstance().model<UserDocument, UserModel>(
-  "User",
-  UserSchema
-);
+const User = mongoose.model<UserDocument, UserModel>("User", UserSchema);
 
 export default User;

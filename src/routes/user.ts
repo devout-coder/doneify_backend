@@ -3,7 +3,7 @@ import { RouteConfig } from "../routeConfig";
 import express, { Application, Request, Response } from "express";
 
 import UserController from "../controllers/user";
-import jwt from "../jwt";
+import jwt from "../services/jwt";
 
 export class UserRoutes extends RouteConfig {
   constructor(app: Application) {
@@ -14,7 +14,6 @@ export class UserRoutes extends RouteConfig {
     this.app
       .route(`/users`)
       .get([jwt.authenticateJWT, UserController.getUsers]);
-
     return this.app;
   }
 }
