@@ -13,6 +13,16 @@ class AuthService {
     }
   }
 
+  async createGoogleUser(data: IUser) {
+    try {
+      const user = User.build(data);
+      return await user.save();
+    } catch (e) {
+      console.log(e);
+      // throw new Error(e);
+    }
+  }
+
   async findUserByEmail(email: string) {
     return User.findOne({
       email: email,

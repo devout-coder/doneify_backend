@@ -10,13 +10,13 @@ const scryptAsync = promisify(scrypt);
 
 export interface IUser {
   email: string;
-  password: string;
+  password?: string;
   username: string;
 }
 
 export interface UserDocument extends Document {
   email: string;
-  password: string;
+  password?: string;
   username: string;
 }
 
@@ -28,7 +28,7 @@ const UserSchema: Schema = new Schema(
   {
     email: { type: String, required: true },
 
-    password: { type: String, required: true },
+    password: { type: String, required: false },
 
     username: { type: String, required: true },
   },

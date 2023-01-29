@@ -10,12 +10,46 @@ import { Password } from "../services/password";
 
 const jwtSecret: string = process.env.JWT_SECRET || "123456";
 
-const tokenExpirationInSeconds = 36000;
-
-const log: IDebugger = debug("auth:controller");
+// const tokenExpirationInSeconds = 36000;
 
 class AuthController {
   constructor() {}
+
+  async signup(req: Request, res: Response, next: NextFunction) {
+    try {
+      const username = req.body.username;
+      const email = req.body.email;
+      const password = req.body.password;
+
+      const user = await AuthService.findUserByEmail(email);
+
+      if (user) {
+        return res.status(400).json({
+          success: false,
+          message: "User already exists",
+        });
+      } else {
+        try {
+          const newUser = await AuthService.createUser({
+            username,
+            email,
+            password,
+          });
+
+          const token = jwt.sign({ id: newUser?.id }, jwtSecret);
+          return res.status(200).json({
+            success: true,
+            data: newUser,
+            token,
+          });
+        } catch (e) {
+          throw new Error("Error while register");
+        }
+      }
+    } catch (e) {
+      next(e);
+    }
+  }
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
@@ -23,18 +57,19 @@ class AuthController {
       const password = req.body.password;
       const user = await AuthService.findUserByEmail(email);
 
-      log("user", user);
-
       if (user) {
-        const isPasswordMatch = await Password.compare(user.password, password);
+        const isPasswordMatch = await Password.compare(
+          user.password!!,
+          password
+        );
         if (!isPasswordMatch) {
-          throw new Error("Invalid Password");
-        } else {
-          log("jwt Secret", jwtSecret);
-          const token = jwt.sign(req.body, jwtSecret, {
-            expiresIn: tokenExpirationInSeconds,
+          // throw new Error("Invalid Password");
+          return res.status(401).json({
+            success: false,
+            message: "Invalid credentials",
           });
-          console.log();
+        } else {
+          const token = jwt.sign({ id: user?.id }, jwtSecret);
 
           return res.status(200).json({
             success: true,
@@ -43,42 +78,49 @@ class AuthController {
           });
         }
       } else {
-        log("User Not Found");
-        throw new Error("User Not Found");
+        return res.status(400).json({
+          success: false,
+          message: "Invalid credentials",
+        });
       }
     } catch (e) {
       next(e);
     }
   }
 
-  async signup(req: Request, res: Response, next: NextFunction) {
+  async signupGoogle(req: Request, res: Response, next: NextFunction) {
     try {
       const username = req.body.username;
-
       const email = req.body.email;
-      const password = req.body.password;
       const user = await AuthService.findUserByEmail(email);
-      log("user", user);
-
+      console.log(`fetched username: ${username} and email: ${email}`);
       if (user) {
-        throw new Error("User Already Exists");
+        //user exists
+        const token = jwt.sign({ id: user?.id }, jwtSecret);
+        console.log(
+          `existing username: ${user.username} and email: ${user.email}`
+        );
+        return res.status(200).json({
+          success: true,
+          data: user,
+          token,
+        });
       } else {
         try {
           const newUser = await AuthService.createUser({
             username,
             email,
-            password,
           });
-          const token = jwt.sign({ username, password }, jwtSecret, {
-            expiresIn: tokenExpirationInSeconds,
-          });
+          console.log(
+            `new username: ${newUser?.username} and email: ${newUser?.email}`
+          );
+          const token = jwt.sign({ id: newUser?.id }, jwtSecret);
           return res.status(200).json({
             success: true,
             data: newUser,
             token,
           });
         } catch (e) {
-          log("Controller capturing error", e);
           throw new Error("Error while register");
         }
       }
