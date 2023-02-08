@@ -11,6 +11,8 @@ import { RouteConfig } from "./routeConfig";
 import { UserRoutes } from "./routes/user";
 import { AuthRoutes } from "./routes/auth";
 import mongoose from "mongoose";
+import { TodoRoutes } from "./routes/todo";
+// const io = require("socket.io")(8000);
 
 const routes: Array<RouteConfig> = [];
 
@@ -33,9 +35,10 @@ if (process.env.DEBUG) {
 
 routes.push(new UserRoutes(app));
 routes.push(new AuthRoutes(app));
+routes.push(new TodoRoutes(app));
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome world");
+  res.send("Fuck this world");
 });
 
 const server: http.Server = http.createServer(app);
@@ -53,7 +56,13 @@ mongoose
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
-
+      // io.on("connection", (socket: any) => {
+      //   socket.on("createTodo", (data: any) => {
+      //     // data will look like => {myID: "123123"}
+      //     console.log("user joined room");
+      //     socket.join(data.myID);
+      //   });
+      // });
       routes.forEach((route: RouteConfig) => {
         console.log(`Routes configured for ${route.getName()}`);
       });
