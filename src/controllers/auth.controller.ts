@@ -1,12 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-
-import AuthService from "../services/auth";
-
 import jwt from "jsonwebtoken";
-
-import debug, { IDebugger } from "debug";
-
 import { Password } from "../services/password";
+import User from "../models/user.model";
 
 const jwtSecret: string = process.env.JWT_SECRET || "123456";
 
@@ -21,7 +16,9 @@ class AuthController {
       const email = req.body.email;
       const password = req.body.password;
 
-      const user = await AuthService.findUserByEmail(email);
+      const user = await User.findOne({
+        email: email,
+      }).exec();
 
       if (user) {
         return res.status(400).json({
@@ -30,12 +27,17 @@ class AuthController {
         });
       } else {
         try {
-          const newUser = await AuthService.createUser({
+          // const newUser = await AuthService.createUser({ //   username,
+          //   email,
+          //   password,
+          // });
+
+          const newUser = new User({
             username,
             email,
             password,
           });
-
+          await newUser.save();
           const token = jwt.sign({ id: newUser?.id }, jwtSecret);
           return res.status(200).json({
             success: true,
@@ -55,7 +57,9 @@ class AuthController {
     try {
       const email = req.body.email;
       const password = req.body.password;
-      const user = await AuthService.findUserByEmail(email);
+      const user = await User.findOne({
+        email: email,
+      }).exec();
 
       if (user) {
         const isPasswordMatch = await Password.compare(
@@ -92,7 +96,9 @@ class AuthController {
     try {
       const username = req.body.username;
       const email = req.body.email;
-      const user = await AuthService.findUserByEmail(email);
+      const user = await User.findOne({
+        email: email,
+      }).exec();
       console.log(`fetched username: ${username} and email: ${email}`);
       if (user) {
         //user exists
@@ -107,10 +113,11 @@ class AuthController {
         });
       } else {
         try {
-          const newUser = await AuthService.createUser({
+          const newUser = new User({
             username,
             email,
           });
+          await newUser.save();
           console.log(
             `new username: ${newUser?.username} and email: ${newUser?.email}`
           );

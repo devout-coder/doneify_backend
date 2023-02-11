@@ -2,7 +2,7 @@ import { Application, Request, Response } from "express";
 
 import { RouteConfig } from "../routeConfig";
 
-import AuthController from "../controllers/auth";
+import AuthController from "../controllers/auth.controller";
 
 export class AuthRoutes extends RouteConfig {
   constructor(app: Application) {

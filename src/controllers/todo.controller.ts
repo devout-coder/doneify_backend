@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import TodoModel, { Todo } from "../models/todo";
+import TodoModel from "../models/todo.model";
+import mongoose from "mongoose";
 
 class TodoController {
   constructor() {}
@@ -15,7 +16,9 @@ class TodoController {
     const timeType: string = req.body.timeType;
     const index: number = req.body.index;
 
-    console.log(`id received is ${req.body.id}`);
+    const loggedUser = res.locals.user;
+
+    // console.log(`user received is ${user.id}`);
 
     const todo = new TodoModel({
       _id: id,
@@ -27,6 +30,7 @@ class TodoController {
       time,
       timeType,
       index,
+      user: loggedUser.id,
     });
     await todo.save();
 
@@ -47,32 +51,35 @@ class TodoController {
     const timeType: string = req.body.timeType;
     const index: number = req.body.index;
 
-    console.log(id);
+    const loggedUser = res.locals.user;
 
-    // if (!mongoose.Types.ObjectId.isValid(id)) {
-    //   return res
-    //     .status(404)
-    //     .json({ success: false, message: "couldn't find required todo" });
-    // } else {
     try {
-      const updatedPost = await TodoModel.findByIdAndUpdate(
-        id,
-        {
-          _id: id,
-          taskName,
-          taskDesc,
-          finished,
-          labelName,
-          timeStamp,
-          time,
-          timeType,
-          index,
-        },
-        {
-          new: true,
-        }
-      );
-      return res.status(200).json({ success: true, data: updatedPost });
+      const oldTodo = await TodoModel.findById(id);
+      if (oldTodo && loggedUser.id == oldTodo.user) {
+        const updatedPost = await TodoModel.findByIdAndUpdate(
+          id,
+          {
+            _id: id,
+            taskName,
+            taskDesc,
+            finished,
+            labelName,
+            timeStamp,
+            time,
+            timeType,
+            index,
+          },
+          {
+            new: true,
+          }
+        );
+        return res.status(200).json({ success: true, data: updatedPost });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "user details didn't match with the owner of the todo",
+        });
+      }
     } catch (error) {
       return res
         .status(400)
@@ -84,21 +91,26 @@ class TodoController {
   async deleteTodo(req: Request, res: Response) {
     const id: number = parseInt(req.body.id);
 
-    // if (!mongoose.Types.ObjectId.isValid(id)) {
-    //   return res
-    //     .status(404)
-    //     .json({ success: false, message: "couldn't find required todo" });
-    // } else {
-    await TodoModel.findByIdAndRemove(id)
-      .then((val) => {
-        return res.status(200).json({ success: true, message: "Todo deleted" });
-      })
-      .catch((err) => {
-        return res
-          .status(400)
-          .json({ success: false, message: "fucked something up" });
+    const loggedUser = res.locals.user;
+    const oldTodo = await TodoModel.findById(id);
+    if (oldTodo && loggedUser.id == oldTodo.user) {
+      await TodoModel.findByIdAndRemove(id)
+        .then((val) => {
+          return res
+            .status(200)
+            .json({ success: true, message: "Todo deleted" });
+        })
+        .catch((err) => {
+          return res
+            .status(400)
+            .json({ success: false, message: "fucked something up" });
+        });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "user details didn't match with the owner of the todo",
       });
-    // }
+    }
   }
 }
 

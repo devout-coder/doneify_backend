@@ -21,7 +21,7 @@ class JWT {
             .status(403)
             .send({ success: false, message: "Token Expired" });
         }
-        req.body.user = user;
+        res.locals.user = user;
         console.log(`the current user is ${JSON.stringify(user)}`);
         next();
       });

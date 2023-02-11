@@ -8,10 +8,10 @@ import dotenv from "dotenv";
 
 import { RouteConfig } from "./routeConfig";
 
-import { UserRoutes } from "./routes/user";
-import { AuthRoutes } from "./routes/auth";
+import { UserRoutes } from "./routes/user.route";
+import { AuthRoutes } from "./routes/auth.route";
 import mongoose from "mongoose";
-import { TodoRoutes } from "./routes/todo";
+import { TodoRoutes } from "./routes/todo.route";
 // const io = require("socket.io")(8000);
 
 const routes: Array<RouteConfig> = [];

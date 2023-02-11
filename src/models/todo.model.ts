@@ -1,16 +1,16 @@
 import mongoose, { Schema } from "mongoose";
 
-export interface Todo {
-  id: Number;
-  taskName: string;
-  taskDesc: string;
-  finished: boolean;
-  labelName: string;
-  timeStamp: number;
-  time: string;
-  timeType: string;
-  index: number;
-}
+// export interface Todo {
+//   id: Number;
+//   taskName: string;
+//   taskDesc: string;
+//   finished: boolean;
+//   labelName: string;
+//   timeStamp: number;
+//   time: string;
+//   timeType: string;
+//   index: number;
+// }
 
 const TodoSchema: Schema = new Schema(
   {
@@ -23,6 +23,7 @@ const TodoSchema: Schema = new Schema(
     time: { type: String, required: true },
     timeType: { type: String, required: true },
     index: { type: Number, required: true },
+    user: { type: String, required: true },
   },
   {
     collection: "todos",
