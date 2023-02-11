@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import TodoModel from "../models/todo.model";
 import mongoose from "mongoose";
+import Todo from "../models/todo.model";
 
 class TodoController {
   constructor() {}
@@ -18,8 +19,6 @@ class TodoController {
 
     const loggedUser = res.locals.user;
 
-    // console.log(`user received is ${user.id}`);
-
     const todo = new TodoModel({
       _id: id,
       taskName,
@@ -32,6 +31,20 @@ class TodoController {
       index,
       user: loggedUser.id,
     });
+
+    //*this isn't working, figure out why
+    // const todo = Todo.build({
+    //   _id: id,
+    //   taskName,
+    //   taskDesc,
+    //   finished,
+    //   labelName,
+    //   timeStamp,
+    //   time,
+    //   timeType,
+    //   index,
+    //   user: loggedUser.id,
+    // });
     await todo.save();
 
     return res.status(200).json({
@@ -54,8 +67,9 @@ class TodoController {
     const loggedUser = res.locals.user;
 
     try {
-      const oldTodo = await TodoModel.findById(id);
-      if (oldTodo && loggedUser.id == oldTodo.user) {
+      const oldTodo = await TodoModel.findById(id).exec();
+      console.log("the val is " + oldTodo);
+      if (oldTodo && loggedUser.id == oldTodo["user"]) {
         const updatedPost = await TodoModel.findByIdAndUpdate(
           id,
           {
@@ -92,8 +106,8 @@ class TodoController {
     const id: number = parseInt(req.body.id);
 
     const loggedUser = res.locals.user;
-    const oldTodo = await TodoModel.findById(id);
-    if (oldTodo && loggedUser.id == oldTodo.user) {
+    const oldTodo = await TodoModel.findById(id).exec();
+    if (oldTodo && loggedUser.id == oldTodo["user"]) {
       await TodoModel.findByIdAndRemove(id)
         .then((val) => {
           return res

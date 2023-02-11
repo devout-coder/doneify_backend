@@ -1,16 +1,34 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
 
-// export interface Todo {
-//   id: Number;
-//   taskName: string;
-//   taskDesc: string;
-//   finished: boolean;
-//   labelName: string;
-//   timeStamp: number;
-//   time: string;
-//   timeType: string;
-//   index: number;
-// }
+export interface ITodo {
+  _id: Number;
+  taskName: string;
+  taskDesc: string;
+  finished: boolean;
+  labelName: string;
+  timeStamp: number;
+  time: string;
+  timeType: string;
+  index: number;
+  user: string;
+}
+
+export interface TodoDocument extends Document {
+  _id: Number;
+  taskName: string;
+  taskDesc: string;
+  finished: boolean;
+  labelName: string;
+  timeStamp: number;
+  time: string;
+  timeType: string;
+  index: number;
+  user: string;
+}
+
+interface TodoModel extends Model<TodoDocument> {
+  build(attrs: ITodo): TodoDocument;
+}
 
 const TodoSchema: Schema = new Schema(
   {
@@ -37,10 +55,14 @@ const TodoSchema: Schema = new Schema(
   }
 );
 
-const TodoModel = mongoose.model("Todo", TodoSchema);
+TodoSchema.statics.build = (attrs: ITodo) => {
+  return new Todo(attrs);
+};
 
-TodoModel.watch().on("change", (change) => {
+const Todo = mongoose.model<TodoDocument, TodoModel>("Todo", TodoSchema);
+
+Todo.watch().on("change", (change) => {
   console.log("Something has changed");
 });
 
-export default TodoModel;
+export default Todo;

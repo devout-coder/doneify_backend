@@ -4,7 +4,6 @@ import { Password } from "../services/password";
 import User from "../models/user.model";
 
 const jwtSecret: string = process.env.JWT_SECRET || "123456";
-
 // const tokenExpirationInSeconds = 36000;
 
 class AuthController {
@@ -27,17 +26,9 @@ class AuthController {
         });
       } else {
         try {
-          // const newUser = await AuthService.createUser({ //   username,
-          //   email,
-          //   password,
-          // });
-
-          const newUser = new User({
-            username,
-            email,
-            password,
-          });
+          const newUser = User.build({ username, email, password });
           await newUser.save();
+
           const token = jwt.sign({ id: newUser?.id }, jwtSecret);
           return res.status(200).json({
             success: true,
@@ -100,6 +91,7 @@ class AuthController {
         email: email,
       }).exec();
       console.log(`fetched username: ${username} and email: ${email}`);
+
       if (user) {
         //user exists
         const token = jwt.sign({ id: user?.id }, jwtSecret);
@@ -113,10 +105,7 @@ class AuthController {
         });
       } else {
         try {
-          const newUser = new User({
-            username,
-            email,
-          });
+          const newUser = User.build({ username, email });
           await newUser.save();
           console.log(
             `new username: ${newUser?.username} and email: ${newUser?.email}`

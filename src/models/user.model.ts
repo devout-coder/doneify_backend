@@ -52,13 +52,14 @@ UserSchema.pre("save", async function (done) {
 
     this.set("password", hashed);
   }
- 
+
   done();
 });
 
 UserSchema.statics.build = (attrs: IUser) => {
   return new User(attrs);
 };
+
 
 const User = mongoose.model<UserDocument, UserModel>("User", UserSchema);
 

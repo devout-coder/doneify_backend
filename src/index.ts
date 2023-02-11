@@ -1,31 +1,17 @@
 import express, { Express, Application, Request, Response } from "express";
-
 import * as http from "http";
-
 import cors from "cors";
-
 import dotenv from "dotenv";
-
-import { RouteConfig } from "./routeConfig";
-
-import { UserRoutes } from "./routes/user.route";
-import { AuthRoutes } from "./routes/auth.route";
+import { authRoutes } from "./routes/auth.route";
 import mongoose from "mongoose";
-import { TodoRoutes } from "./routes/todo.route";
-// const io = require("socket.io")(8000);
-
-const routes: Array<RouteConfig> = [];
+import { Server } from "socket.io";
+import { todoRoutes } from "./routes/todo.route";
 
 const app: Express = express();
-
 dotenv.config({});
-
 app.use(express.json());
-
 app.use(cors());
-
 const PORT = process.env.PORT || 8000;
-
 if (process.env.DEBUG) {
   process.on("unhandledRejection", function (reason) {
     process.exit(1);
@@ -33,15 +19,16 @@ if (process.env.DEBUG) {
 } else {
 }
 
-routes.push(new UserRoutes(app));
-routes.push(new AuthRoutes(app));
-routes.push(new TodoRoutes(app));
-
+//routes
 app.get("/", (req: Request, res: Response) => {
   res.send("Fuck this world");
 });
+todoRoutes(app);
+authRoutes(app);
 
 const server: http.Server = http.createServer(app);
+
+const io = new Server(server);
 
 const mongooseOptions = {
   useNewUrlParser: true,
@@ -56,6 +43,11 @@ mongoose
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
+      io.on("connection", (userSocket: any) => {
+        userSocket.on("send_message", (data: any) => {
+          userSocket.broadcast.emit("receive_message", data);
+        });
+      });
       // io.on("connection", (socket: any) => {
       //   socket.on("createTodo", (data: any) => {
       //     // data will look like => {myID: "123123"}
@@ -63,9 +55,9 @@ mongoose
       //     socket.join(data.myID);
       //   });
       // });
-      routes.forEach((route: RouteConfig) => {
-        console.log(`Routes configured for ${route.getName()}`);
-      });
+      // routes.forEach((route: RouteConfig) => {
+      //   console.log(`Routes configured for ${route.getName()}`);
+      // });
     });
   })
   .catch((err) => {
