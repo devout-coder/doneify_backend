@@ -44,20 +44,12 @@ mongoose
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
       io.on("connection", (userSocket: any) => {
+        console.log("connection triggered");
         userSocket.on("send_message", (data: any) => {
-          userSocket.broadcast.emit("receive_message", data);
+          console.log(`gotta send a message ${JSON.stringify(data)}`);
+          io.emit("receive_message", data);
         });
       });
-      // io.on("connection", (socket: any) => {
-      //   socket.on("createTodo", (data: any) => {
-      //     // data will look like => {myID: "123123"}
-      //     console.log("user joined room");
-      //     socket.join(data.myID);
-      //   });
-      // });
-      // routes.forEach((route: RouteConfig) => {
-      //   console.log(`Routes configured for ${route.getName()}`);
-      // });
     });
   })
   .catch((err) => {
