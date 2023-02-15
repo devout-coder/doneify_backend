@@ -28,7 +28,7 @@ authRoutes(app);
 
 const server: http.Server = http.createServer(app);
 
-const io = new Server(server);
+export const io = new Server(server);
 
 const mongooseOptions = {
   useNewUrlParser: true,
@@ -45,10 +45,10 @@ mongoose
       console.log(`Server is running on ${PORT}`);
       io.on("connection", (userSocket: any) => {
         console.log("connection triggered");
-        userSocket.on("send_message", (data: any) => {
-          console.log(`gotta send a message ${JSON.stringify(data)}`);
-          io.emit("receive_message", data);
-        });
+        // userSocket.on("send_message", (data: any) => {
+        //   console.log(`gotta send a message ${JSON.stringify(data)}`);
+        //   io.emit("receive_message", data);
+        // });
       });
     });
   })
