@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 import { Request, Response, NextFunction } from "express";
 
-const JWT_KEY = process.env.JWT_SECRET || "123456";
+export const JWT_KEY = process.env.JWT_SECRET || "123456";
 
 import debug, { IDebugger } from "debug";
 

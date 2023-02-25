@@ -75,6 +75,8 @@ Todo.watch().on("change", (change) => {
   //delete
   //{"_id":{"_data":"8263ED0F01000000082B022C0100296E5A100463B6F177E0FD4903B80618784767A672461E5F6964003101BCC2DE23731E0004","_typeBits":"QA=="},"operationType":"delete","clusterTime":{"$timestamp":"7200427876204675080"},"ns":{"db":"doneify","coll":"todos"},"documentKey":{"_id":244510056626575}}
 
+  // io.emit("todo_changed_server", JSON.stringify(map.get("fullDocument")));
+
   io.emit("todo_changed_server", JSON.stringify(map.get("fullDocument")));
 });
 

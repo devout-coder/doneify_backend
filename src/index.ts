@@ -6,6 +6,8 @@ import { authRoutes } from "./routes/auth.route";
 import mongoose from "mongoose";
 import { Server } from "socket.io";
 import { todoRoutes } from "./routes/todo.route";
+import jwt from "jsonwebtoken";
+import { JWT_KEY } from "./services/jwt";
 
 const app: Express = express();
 dotenv.config({});
@@ -39,16 +41,24 @@ const mongooseOptions = {
 const MONGODB_URI = process.env.MONGODB_URI || "";
 
 mongoose
+  .set("strictQuery", true)
   .connect(MONGODB_URI, mongooseOptions)
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
-      io.on("connection", (userSocket: any) => {
+      io.use((socket, next) => {
+        const token = socket.handshake.auth.auth_token;
+        console.log("token is " + token);
+        jwt.verify(token, JWT_KEY, (err: any, user: any) => {
+          if (err) {
+            console.log("Error", err);
+          }
+          console.log(`the current user is ${JSON.stringify(user)}`);
+          next();
+        });
+      });
+      io.on("connection", (socket) => {
         console.log("connection triggered");
-        // userSocket.on("send_message", (data: any) => {
-        //   console.log(`gotta send a message ${JSON.stringify(data)}`);
-        //   io.emit("receive_message", data);
-        // });
       });
     });
   })
