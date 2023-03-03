@@ -2,22 +2,23 @@ import { Request, Response, NextFunction } from "express";
 import TodoModel from "../models/todo.model";
 import mongoose from "mongoose";
 import Todo from "../models/todo.model";
+import { io } from "..";
 
 class TodoController {
   constructor() {}
 
-  async createTodo(req: Request, res: Response) {
-    const id: number = parseInt(req.body.id);
-    const taskName: string = req.body.taskName;
-    const taskDesc: string = req.body.taskDesc;
-    const finished: boolean = req.body.finished;
-    const labelName: string = req.body.labelName;
-    const timeStamp: number = req.body.timeStamp;
-    const time: string = req.body.time;
-    const timeType: string = req.body.timeType;
-    const index: number = req.body.index;
+  async createTodo(data: any, user: any, callback: any, socket: any) {
+    const id: number = parseInt(data["id"]);
+    const taskName: string = data.taskName;
+    const taskDesc: string = data.taskDesc;
+    const finished: boolean = data.finished;
+    const labelName: string = data.labelName;
+    const timeStamp: number = data.timeStamp;
+    const time: string = data.time;
+    const timeType: string = data.timeType;
+    const index: number = data.index;
 
-    const loggedUser = res.locals.user;
+    // console.log("gotten data is " + id + taskName + taskDesc + finished);
 
     const todo = new TodoModel({
       _id: id,
@@ -29,48 +30,35 @@ class TodoController {
       time,
       timeType,
       index,
-      user: loggedUser.id,
+      user: user.id,
     });
-
-    //*this isn't working, figure out why
-    // const todo = Todo.build({
-    //   _id: id,
-    //   taskName,
-    //   taskDesc,
-    //   finished,
-    //   labelName,
-    //   timeStamp,
-    //   time,
-    //   timeType,
-    //   index,
-    //   user: loggedUser.id,
-    // });
     await todo.save();
+    socket
+      .to(user.id)
+      .emit("todo_operation", { operation: "create", data: todo });
 
-    return res.status(200).json({
+    callback({
       success: true,
       data: todo,
     });
   }
 
-  async updateTodo(req: Request, res: Response) {
-    const id: number = parseInt(req.body.id);
-    const taskName: string = req.body.taskName;
-    const taskDesc: string = req.body.taskDesc;
-    const finished: boolean = req.body.finished;
-    const labelName: string = req.body.labelName;
-    const timeStamp: number = req.body.timeStamp;
-    const time: string = req.body.time;
-    const timeType: string = req.body.timeType;
-    const index: number = req.body.index;
-
-    const loggedUser = res.locals.user;
+  async updateTodo(data: any, user: any, callback: any, socket: any) {
+    const id: number = parseInt(data["id"]);
+    const taskName: string = data.taskName;
+    const taskDesc: string = data.taskDesc;
+    const finished: boolean = data.finished;
+    const labelName: string = data.labelName;
+    const timeStamp: number = data.timeStamp;
+    const time: string = data.time;
+    const timeType: string = data.timeType;
+    const index: number = data.index;
 
     try {
       const oldTodo = await TodoModel.findById(id).exec();
       console.log("the val is " + oldTodo);
-      if (oldTodo && loggedUser.id == oldTodo["user"]) {
-        const updatedPost = await TodoModel.findByIdAndUpdate(
+      if (oldTodo && user.id == oldTodo["user"]) {
+        const updatedTodo = await TodoModel.findByIdAndUpdate(
           id,
           {
             _id: id,
@@ -87,40 +75,54 @@ class TodoController {
             new: true,
           }
         );
-        return res.status(200).json({ success: true, data: updatedPost });
+
+        socket.to(user.id).emit("todo_operation", {
+          operation: "update",
+          data: updatedTodo,
+        });
+        callback({
+          success: true,
+          data: updatedTodo,
+        });
       } else {
-        return res.status(400).json({
+        callback({
           success: false,
           message: "user details didn't match with the owner of the todo",
         });
       }
     } catch (error) {
-      return res
-        .status(400)
-        .json({ success: false, message: "fucked something up" });
+      callback({
+        success: false,
+        message: error,
+      });
     }
-    // }
   }
 
-  async deleteTodo(req: Request, res: Response) {
-    const id: number = parseInt(req.body.id);
+  async deleteTodo(data: any, user: any, callback: any, socket: any) {
+    const id: number = parseInt(data["id"]);
 
-    const loggedUser = res.locals.user;
     const oldTodo = await TodoModel.findById(id).exec();
-    if (oldTodo && loggedUser.id == oldTodo["user"]) {
+    if (oldTodo && user.id == oldTodo["user"]) {
       await TodoModel.findByIdAndRemove(id)
         .then((val) => {
-          return res
-            .status(200)
-            .json({ success: true, message: "Todo deleted" });
+          callback({
+            success: true,
+            data: "Todo deleted",
+          });
+
+          socket.to(user.id).emit("todo_operation", {
+            operation: "delete",
+            data: oldTodo,
+          });
         })
         .catch((err) => {
-          return res
-            .status(400)
-            .json({ success: false, message: "fucked something up" });
+          callback({
+            success: false,
+            message: err,
+          });
         });
     } else {
-      return res.status(400).json({
+      callback({
         success: false,
         message: "user details didn't match with the owner of the todo",
       });
