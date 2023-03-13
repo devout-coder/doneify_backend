@@ -50,7 +50,7 @@ mongoose
 
       io.use((socket, next) => {
         const token = socket.handshake.auth.auth_token;
-        // console.log("token is " + token);
+        console.log("token is " + token);
         jwt.verify(token, JWT_KEY, (err: any, user: any) => {
           if (err) {
             console.log("Error", err);

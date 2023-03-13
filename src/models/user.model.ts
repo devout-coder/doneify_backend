@@ -12,12 +12,14 @@ export interface IUser {
   email: string;
   password?: string;
   username: string;
+  todoTimeStamp?: number;
 }
 
 export interface UserDocument extends Document {
   email: string;
   password?: string;
   username: string;
+  todoTimeStamp?: number;
 }
 
 interface UserModel extends Model<UserDocument> {
@@ -27,10 +29,9 @@ interface UserModel extends Model<UserDocument> {
 const UserSchema: Schema = new Schema(
   {
     email: { type: String, required: true },
-
     password: { type: String, required: false },
-
     username: { type: String, required: true },
+    todoTimeStamp: { type: Number, required: false },
   },
   {
     collection: "users",
@@ -60,7 +61,19 @@ UserSchema.statics.build = (attrs: IUser) => {
   return new User(attrs);
 };
 
-
 const User = mongoose.model<UserDocument, UserModel>("User", UserSchema);
+
+export async function updateTimeStamp(userId: string, timeStamp: number) {
+  const userDetails = await User.findById(userId).exec();
+  if (userDetails != null) {
+    const result = await User.findByIdAndUpdate(userId, {
+      username: userDetails.username,
+      email: userDetails.email,
+      password: userDetails.password,
+      todoTimeStamp: timeStamp,
+    });
+    console.log(`result of updateTimeStamp is ${result}`);
+  }
+}
 
 export default User;

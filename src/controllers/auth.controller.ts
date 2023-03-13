@@ -36,7 +36,7 @@ class AuthController {
             token,
           });
         } catch (e) {
-          throw new Error("Error while register");
+          throw new Error(`Error while register ${e}`);
         }
       }
     } catch (e) {

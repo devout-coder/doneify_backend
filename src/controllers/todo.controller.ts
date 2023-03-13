@@ -3,6 +3,7 @@ import TodoModel from "../models/todo.model";
 import mongoose from "mongoose";
 import Todo from "../models/todo.model";
 import { io } from "..";
+import User, { updateTimeStamp } from "../models/user.model";
 
 class TodoController {
   constructor() {}
@@ -19,6 +20,7 @@ class TodoController {
     const index: number = data.index;
 
     // console.log("gotten data is " + id + taskName + taskDesc + finished);
+    console.log(`id is ${user.id}`);
 
     const todo = new TodoModel({
       _id: id,
@@ -41,6 +43,8 @@ class TodoController {
       success: true,
       data: todo,
     });
+
+    updateTimeStamp(user.id, timeStamp);
   }
 
   async updateTodo(data: any, user: any, callback: any, socket: any) {
@@ -84,6 +88,8 @@ class TodoController {
           success: true,
           data: updatedTodo,
         });
+
+        updateTimeStamp(user.id, timeStamp);
       } else {
         callback({
           success: false,
@@ -114,6 +120,8 @@ class TodoController {
             operation: "delete",
             data: oldTodo,
           });
+
+          updateTimeStamp(user.id, oldTodo?.timeStamp);
         })
         .catch((err) => {
           callback({
