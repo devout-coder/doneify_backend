@@ -8,6 +8,43 @@ import User, { updateTimeStamp } from "../models/user.model";
 class TodoController {
   constructor() {}
 
+  async getTodos(req: Request, res: Response, next: NextFunction) {
+    const user = res.locals.user;
+
+    const userDetails = await User.findById(user.id).exec();
+    if (userDetails != null) {
+      const offlineDBUpdatedTime: number = parseInt(
+        req.params.lastOfflineUpdated
+      );
+      console.log("offline db was updated at " + offlineDBUpdatedTime);
+      const onlineDBUpdatedTime: number | undefined =
+        userDetails?.todoTimeStamp;
+      console.log("online db was updated at " + onlineDBUpdatedTime);
+      if (
+        onlineDBUpdatedTime != undefined &&
+        onlineDBUpdatedTime > offlineDBUpdatedTime
+      ) {
+        const todos = await TodoModel.find({ user: user.id }).exec();
+        console.log(`all todos are fetched are ${todos}`);
+        return res.status(200).json({
+          success: true,
+          data: todos,
+          timeStamp: onlineDBUpdatedTime,
+        });
+      } else {
+        console.log("offline db up to date");
+        return res.status(400).json({
+          success: false,
+          message: "offline db up to date",
+        });
+      }
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+  }
+
   async createTodo(data: any, user: any, callback: any, socket: any) {
     const id: number = parseInt(data["id"]);
     const taskName: string = data.taskName;
