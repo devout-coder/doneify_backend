@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import TodoModel from "../models/todo.model";
+import DeletedTodoModel from "../models/deleted_todo.model";
 import mongoose from "mongoose";
 import Todo from "../models/todo.model";
 import { io } from "..";
@@ -19,22 +20,34 @@ class TodoController {
       console.log("offline db was updated at " + offlineDBUpdatedTime);
       const onlineDBUpdatedTime: number | undefined =
         userDetails?.todoTimeStamp;
-      console.log("online db was updated at " + onlineDBUpdatedTime);
+      console.log(`online db was updated at ${userDetails?.todoTimeStamp}`);
       if (
         onlineDBUpdatedTime != undefined &&
         onlineDBUpdatedTime > offlineDBUpdatedTime
       ) {
-        const todos = await TodoModel.find({ user: user.id }).exec();
-        console.log(`all todos are fetched are ${todos}`);
+        const newTodos = await TodoModel.find({
+          user: user.id,
+          timeStamp: { $gt: offlineDBUpdatedTime },
+        }).exec();
+        console.log(`all todos are fetched are ${newTodos}`);
+
+        const newDeletedTodos = await DeletedTodoModel.find({
+          user: user.id,
+          timeStamp: { $gt: offlineDBUpdatedTime },
+        }).exec();
+        console.log(`all deleted todos are fetched are ${newDeletedTodos}`);
+
         return res.status(200).json({
           success: true,
-          data: todos,
+          message: "offline db needs to be updated",
+          todos: newTodos,
+          deletedTodos: newDeletedTodos,
           timeStamp: onlineDBUpdatedTime,
         });
       } else {
         console.log("offline db up to date");
-        return res.status(400).json({
-          success: false,
+        return res.status(200).json({
+          success: true,
           message: "offline db up to date",
         });
       }
@@ -143,11 +156,12 @@ class TodoController {
 
   async deleteTodo(data: any, user: any, callback: any, socket: any) {
     const id: number = parseInt(data["id"]);
+    const timeStamp: number = data.timeStamp;
 
     const oldTodo = await TodoModel.findById(id).exec();
     if (oldTodo && user.id == oldTodo["user"]) {
       await TodoModel.findByIdAndRemove(id)
-        .then((val) => {
+        .then(async (val) => {
           callback({
             success: true,
             data: "Todo deleted",
@@ -158,6 +172,12 @@ class TodoController {
             data: oldTodo,
           });
 
+          const deletedTodo = new DeletedTodoModel({
+            _id: id,
+            timeStamp,
+            user: user.id,
+          });
+          await deletedTodo.save();
           updateTimeStamp(user.id, oldTodo?.timeStamp);
         })
         .catch((err) => {
