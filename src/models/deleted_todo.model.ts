@@ -9,7 +9,6 @@ export interface IDeletedTodo {
 export interface DeletedTodoDocument extends Document {
   _id: Number;
   timeStamp: number;
-
   user: string;
 }
 

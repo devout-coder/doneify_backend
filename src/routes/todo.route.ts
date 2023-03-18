@@ -1,6 +1,7 @@
 import { Application } from "express";
 import TodoController from "../controllers/todo.controller";
 import jwt from "../services/jwt";
+import labelController from "../controllers/label.controller";
 
 export const todoRoutes = (app: Application): Application => {
   // app.route(`/todos`).post([jwt.authenticateJWT, TodoController.createTodo]);
@@ -12,6 +13,7 @@ export const todoRoutes = (app: Application): Application => {
   app.get("/todos/:lastOfflineUpdated", [
     jwt.authenticateJWT,
     TodoController.getTodos,
+    labelController.getLabels,
   ]);
   return app;
 };

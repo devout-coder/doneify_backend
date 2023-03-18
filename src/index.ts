@@ -9,6 +9,7 @@ import { todoRoutes } from "./routes/todo.route";
 import jwt from "jsonwebtoken";
 import { JWT_KEY } from "./services/jwt";
 import todoController from "./controllers/todo.controller";
+import labelController from "./controllers/label.controller";
 
 const app: Express = express();
 dotenv.config({});
@@ -84,6 +85,21 @@ mongoose
         socket.on("delete_todo", async (dataString, callback) => {
           const data = JSON.parse(dataString);
           todoController.deleteTodo(data, user, callback, socket);
+        });
+
+        socket.on("add_label", async (dataString, callback) => {
+          const data = JSON.parse(dataString);
+          labelController.createLabel(data, user, callback, socket);
+        });
+
+        socket.on("edit_label", async (dataString, callback) => {
+          const data = JSON.parse(dataString);
+          labelController.updateLabel(data, user, callback, socket);
+        });
+
+        socket.on("delete_label", async (dataString, callback) => {
+          const data = JSON.parse(dataString);
+          labelController.deleteLabel(data, user, callback, socket);
         });
       });
     });
