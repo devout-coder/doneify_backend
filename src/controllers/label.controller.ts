@@ -2,9 +2,26 @@ import { Request, Response, NextFunction } from "express";
 import User, { updateTimeStamp } from "../models/user.model";
 import Label from "../models/label.model";
 import DeletedLabel from "../models/deleted_label.model";
+import { generateRandomNumber } from "../services/random_no";
 
 class LabelController {
   constructor() {}
+
+  async generateDefaultLabel(user: String) {
+    const id: Number = generateRandomNumber(10);
+    const timeStamp: Number = Date.now();
+    const name: String = "General";
+    const color: String = "Color(0xffffffff)";
+
+    const label = new Label({
+      _id: id,
+      name,
+      color,
+      timeStamp,
+      user: user,
+    });
+    await label.save();
+  }
 
   async getLabels(req: Request, res: Response) {
     const user = res.locals.user;
@@ -15,7 +32,7 @@ class LabelController {
     }).exec();
     console.log(`all labels are fetched are ${newLabels}`);
 
-    const newDeletedLabels = await Label.find({
+    const newDeletedLabels = await DeletedLabel.find({
       user: user.id,
       timeStamp: { $gt: res.locals.offlineDBUpdatedTime },
     }).exec();

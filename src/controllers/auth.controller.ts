@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { Password } from "../services/password";
 import User from "../models/user.model";
+import labelController from "./label.controller";
 
 const jwtSecret: string = process.env.JWT_SECRET || "123456";
 // const tokenExpirationInSeconds = 36000;
@@ -28,6 +29,8 @@ class AuthController {
         try {
           const newUser = User.build({ username, email, password });
           await newUser.save();
+
+          labelController.generateDefaultLabel(newUser.id);
 
           const token = jwt.sign({ id: newUser?.id }, jwtSecret);
           return res.status(200).json({
