@@ -4,8 +4,6 @@ import jwt from "../services/jwt";
 import labelController from "../controllers/label.controller";
 
 export const todoRoutes = (app: Application): Application => {
-  // app.route(`/todos`).post([jwt.authenticateJWT, TodoController.createTodo]);
-  // app.route(`/todos`).delete([jwt.authenticateJWT, TodoController.deleteTodo]);
   // app.route(`/todos`).put([jwt.authenticateJWT, TodoController.updateTodo]);
   // app
   //   .route("/todos?offlineTimestamp=:lastOfflineUpdated")
@@ -14,6 +12,12 @@ export const todoRoutes = (app: Application): Application => {
     jwt.authenticateJWT,
     TodoController.getTodos,
     labelController.getLabels,
+  ]);
+  app.post("/postLogin", [
+    jwt.authenticateJWT,
+    // TodoController.getTodos,
+    // labelController.getLabels,
+    TodoController.postLogin,
   ]);
   return app;
 };

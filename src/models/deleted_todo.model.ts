@@ -23,7 +23,7 @@ const DeletedTodoSchema: Schema = new Schema(
     user: { type: String, required: true },
   },
   {
-    collection: "deleted_todo",
+    collection: "deleted_todos",
     toObject: {
       transform: function (doc, ret) {},
     },
