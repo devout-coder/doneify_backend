@@ -11,86 +11,119 @@ class TodoController {
   async postLogin(req: Request, res: Response, next: NextFunction) {
     const user = res.locals.user;
 
-    const newTodos = req.body.todos;
-    const newLabels = req.body.labels;
-    const allLabels = await Label.find({
-      user: user.id,
-    }).exec();
-    const allTodos = await Todo.find({
-      user: user.id,
-    }).exec();
+    try {
+      const newTodos = req.body.todos;
+      const newLabels = req.body.labels;
+      const allLabels = await Label.find({
+        user: user.id,
+      }).exec();
+      const allTodos = await Todo.find({ user: user.id }).exec();
 
-    var repeatedLabels: any = {};
+      var repeatedLabels: any = {};
 
-    for (let newLabel of newLabels) {
-      var colorRepeated: String = "";
-      var colorRepeatedLabel: String = "";
-      var nameRepeated: String = "";
-      for (let label of allLabels) {
-        if (label["name"] == newLabel["name"]) {
-          nameRepeated = label["name"];
-        } else if (label["color"] == newLabel["color"]) {
-          colorRepeated = label["color"];
-          colorRepeatedLabel = label["name"];
+      for (let newLabel of newLabels) {
+        var colorRepeated: String = "";
+        var colorRepeatedLabel: String = "";
+        var nameRepeated: String = "";
+        for (let label of allLabels) {
+          if (label["name"] == newLabel["name"]) {
+            nameRepeated = label["name"];
+          } else if (label["color"] == newLabel["color"]) {
+            colorRepeated = label["color"];
+            colorRepeatedLabel = label["name"];
+          }
+        }
+        if (colorRepeated == "" && nameRepeated == "") {
+          const label = new Label({
+            _id: parseInt(newLabel["id"]),
+            name: newLabel["name"],
+            color: newLabel["color"],
+            timeStamp: Date.now(),
+            user: user.id,
+          });
+          var result: any = await label.save();
+          allLabels.push(result);
+          // console.log(result);
+        } else if (colorRepeated != "") {
+          repeatedLabels[newLabel["name"]] = colorRepeatedLabel;
         }
       }
-      if (colorRepeated == "" && nameRepeated == "") {
-        const label = new Label({
-          _id: parseInt(newLabel["id"]),
-          name: newLabel["name"],
-          color: newLabel["color"],
-          timeStamp: Date.now(),
+
+      const repeatedLabelsArr = Object.keys(repeatedLabels);
+      console.log(`repeated labels are ${repeatedLabelsArr}}`);
+
+      for (let todo of newTodos) {
+        var id: number = parseInt(todo["id"]);
+        var taskName: string = todo["taskName"];
+        var taskDesc: string = todo["taskDesc"];
+        var finished: boolean = todo["finished"];
+        var labelName: string = todo["labelName"];
+        var timeStamp: number = todo["timeStamp"];
+        var time: string = todo["time"];
+        var timeType: string = todo["timeType"];
+        var index: number = todo["index"];
+
+        if (repeatedLabelsArr.includes(labelName)) {
+          console.log(`todo with repeated label is ${todo}`);
+          labelName = repeatedLabels[labelName];
+        }
+
+        const timeTodos = await Todo.find({
           user: user.id,
-        });
-        var result: any = await label.save();
-        allLabels.push(result);
-        // console.log(result);
-      } else if (colorRepeated != "") {
-        repeatedLabels[newLabel["name"]] = colorRepeatedLabel;
-      }
-    }
+          time: todo["time"],
+        }).exec();
+        index = timeTodos.length;
 
-    const repeatedLabelsArr = Object.keys(repeatedLabels);
-
-    for (let todo of newTodos) {
-      var id: number = parseInt(todo["id"]);
-      var taskName: string = todo["taskName"];
-      var taskDesc: string = todo["taskDesc"];
-      var finished: boolean = todo["finished"];
-      var labelName: string = todo["labelName"];
-      var timeStamp: number = todo["timeStamp"];
-      var time: string = todo["time"];
-      var timeType: string = todo["timeType"];
-      var index: number = todo["index"];
-      if (repeatedLabelsArr.includes(labelName)) {
-        console.log(`todo with repeated label is ${todo}`);
-        labelName = repeatedLabels[labelName];
+        console.log(id, taskName, index);
+        const oldTodo = await Todo.findById(id).exec();
+        if (!oldTodo) {
+          const newTodo = new Todo({
+            _id: id,
+            taskName,
+            taskDesc,
+            finished,
+            labelName,
+            timeStamp,
+            time,
+            timeType,
+            index,
+            user: user.id,
+          });
+          const result = await newTodo.save();
+          allTodos.push(result);
+        } else {
+          const updatedTodo = await Todo.findByIdAndUpdate(
+            id,
+            {
+              _id: id,
+              taskName,
+              taskDesc,
+              finished,
+              labelName,
+              timeStamp,
+              time,
+              timeType,
+              index,
+            },
+            {
+              new: true,
+            }
+          );
+          allTodos.push(updatedTodo!);
+        }
       }
-      const newTodo = new Todo({
-        _id: id,
-        taskName,
-        taskDesc,
-        finished,
-        labelName,
-        timeStamp,
-        time,
-        timeType,
-        index,
-        user: user.id,
+      // console.log(`all labels are ${allLabels} all todos are ${allTodos}`);
+
+      updateTimeStamp(user.id, Date.now());
+
+      return res.status(200).json({
+        success: true,
+        labels: allLabels,
+        todos: allTodos,
       });
-      const result = await newTodo.save();
-      allTodos.push(result);
+    } catch (error) {
+      console.log(error);
     }
-    console.log(`all labels are ${allLabels} all todos are ${allTodos}`);
-
-    updateTimeStamp(user.id, Date.now());
-
-    return res.status(200).json({
-      success: true,
-      labels: allLabels,
-      todos: allTodos,
-    });
-
     // console.log(newLabels);
     // console.log(allLabels);
     // console.log(newTodos);

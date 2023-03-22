@@ -72,7 +72,7 @@ export async function updateTimeStamp(userId: string, timeStamp: number) {
       password: userDetails.password,
       todoTimeStamp: timeStamp,
     });
-    console.log(`result of updateTimeStamp is ${result}`);
+    // console.log(`result of updateTimeStamp is ${result}`);
   }
 }
 
