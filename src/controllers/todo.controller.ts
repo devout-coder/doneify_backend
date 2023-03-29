@@ -207,6 +207,7 @@ class TodoController {
       user: user.id,
     });
     await todo.save();
+
     socket
       .to(user.id)
       .emit("todo_operation", { operation: "create", data: todo });

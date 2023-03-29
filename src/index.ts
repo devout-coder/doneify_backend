@@ -40,11 +40,11 @@ const mongooseOptions = {
   serverSelectionTimeoutMS: 5000,
 };
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose
   .set("strictQuery", true)
-  .connect(MONGODB_URI, mongooseOptions)
+  .connect(MONGODB_URI!, mongooseOptions)
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
@@ -52,7 +52,7 @@ mongoose
       io.use((socket, next) => {
         const token = socket.handshake.auth.auth_token;
         // console.log("token is " + token);
-        jwt.verify(token, JWT_KEY, (err: any, user: any) => {
+        jwt.verify(token, JWT_KEY!, (err: any, user: any) => {
           if (err) {
             console.log("Error", err);
           }

@@ -13,10 +13,11 @@ class JWT {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader !== "null") {
       // const token = authHeader.split(" ")[1];
-      log("auth Header", JWT_KEY);
-      jwt.verify(authHeader, JWT_KEY, (err: any, user: any) => {
+      // log("auth Header", JWT_KEY);
+      jwt.verify(authHeader, JWT_KEY!, (err: any, user: any) => {
         if (err) {
-          log("Error", err);
+          console.log("in jwt service");
+          console.log("Error", err);
           return res
             .status(403)
             .send({ success: false, message: "Token Expired" });
