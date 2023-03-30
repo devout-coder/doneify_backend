@@ -1,2 +1,8 @@
 node_modules
 .env
+data/
+.vscode/
+yarn-error.log
+yarn.lock
+package-lock.json
+Session.vim

@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  doneify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 401271784573.dkr.ecr.us-east-1.amazonaws.com/doneify:latest # Change to your ECR repo
+    container_name: doneify_cunt
+    volumes:
+      - ./app:/app
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env
