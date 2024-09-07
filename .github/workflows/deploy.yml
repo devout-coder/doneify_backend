@@ -1,0 +1,63 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Set up AWS CLI
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Log in to Amazon ECR
+      - name: Login to Amazon ECR
+        id: ecr_login
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY }}
+
+      # Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t doneify .
+          docker tag doneify:latest ${{ secrets.ECR_REPOSITORY }}:latest
+
+      # Push the Docker image to Amazon ECR
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      # SSH into EC2 and use docker-compose
+      - name: Deploy to EC2 using Docker Compose
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ubuntu/doneify_dir 
+          docker-compose pull doneify
+          docker-compose down
+          docker-compose up -d
+          EOF
+        env:
+          EC2_KEY: ${{ secrets.EC2_KEY }}
+
+      # Adding SSH key
+      - name: Add SSH Key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa

@@ -14,14 +14,9 @@ import labelController from "./controllers/label.controller";
 const app: Express = express();
 app.use(express.json());
 app.use(cors());
+dotenv.config({});
 
 const PORT = process.env.PORT || 8000;
-if (process.env.DEBUG) {
-  process.on("unhandledRejection", function (reason) {
-    process.exit(1);
-  });
-} else {
-}
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Fuck this world");
@@ -32,19 +27,17 @@ todoRoutes(app);
 const server: http.Server = http.createServer(app);
 
 export const io = new Server(server);
-
 const mongooseOptions = {
-  //   // serverSelectionTimeoutMS: 5000,
+    // serverSelectionTimeoutMS: 5000,
   // directConnection: true,
   // useNewUrlParser: true,
   // useUnifiedTopology: true,
-  user: process.env.MONGO_ROOT_USER, // MongoDB username
-  pass: process.env.MONGO_ROOT_PASSWORD, // MongoDB password
 };
 
+const MONGODB_URI = process.env.MONGODB_URI;
 mongoose
   .set("strictQuery", true)
-  .connect(process.env.SERVER_URL ?? "", mongooseOptions)
+  .connect(MONGODB_URI! ?? "", mongooseOptions)
   .then(() => {
     server.listen(PORT, () => {
       console.log(`Server is running on ${PORT}`);
