@@ -31,13 +31,13 @@ jobs:
       # Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t doneify .
-          docker tag doneify:latest ${{ secrets.ECR_REPOSITORY }}:latest
+          docker build -t my_repo .
+          docker tag my_repo:latest ${{ secrets.ECR_REPOSITORY }}/my_repo:latest
 
       # Push the Docker image to Amazon ECR
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+          docker push ${{ secrets.ECR_REPOSITORY }}/my_repo:latest
 
   deploy:
     runs-on: ubuntu-latest
