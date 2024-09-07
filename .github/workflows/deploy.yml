@@ -50,15 +50,18 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-      # SSH into EC2 and use docker-compose
-      - name: Deploy to EC2 using Docker Compose
+
+      - name: Add SSH known hosts (EC2 public IP or domain)
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH into EC2 instance and execute a command
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}
+
+      - name: Pull images and deploy 
+        run: |
           cd /home/ubuntu/doneify_dir 
           docker-compose pull doneify
           docker-compose down
           docker-compose up -d
-          EOF
-        env:
-          EC2_KEY: ${{ secrets.EC2_KEY }}
-
