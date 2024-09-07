@@ -45,9 +45,10 @@ jobs:
 
     steps:
       # Adding SSH key
-      - name: Add SSH Key
+      - name: Set up SSH key
         run: |
-          echo "${{ secrets.EC2_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
       # SSH into EC2 and use docker-compose
       - name: Deploy to EC2 using Docker Compose
