@@ -61,7 +61,7 @@ jobs:
 
       - name: Pull images and deploy 
         run: |
-          cd /home/ubuntu/doneify_dir 
+          cd ~/doneify_dir 
           docker-compose pull doneify
           docker-compose down
           docker-compose up -d
